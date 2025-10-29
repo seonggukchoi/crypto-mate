@@ -1,0 +1,12 @@
+services:
+  - type: worker
+    name: cryptomate-bot
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.11.0
+      - key: NODE_ENV
+        value: production
