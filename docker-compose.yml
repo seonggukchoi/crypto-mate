@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # Development environment with hot-reload
+  cryptomate-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder  # Use builder stage for development
+    container_name: cryptomate-dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+    volumes:
+      # Mount source code for hot-reload
+      - ./src:/app/src:ro
+      - ./package.json:/app/package.json:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      # Prevent node_modules from being overwritten
+      - /app/node_modules
+    command: npm run dev
+    networks:
+      - cryptomate-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Test runner service
+  cryptomate-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: cryptomate-test
+    env_file:
+      - .env.example  # Use example env for testing
+    environment:
+      - NODE_ENV=test
+      - CI=true
+    volumes:
+      # Mount for test results
+      - ./coverage:/app/coverage
+      - ./reports:/app/reports
+    command: npm run test:run
+    profiles:
+      - test
+    networks:
+      - cryptomate-network
+
+networks:
+  cryptomate-network:
+    driver: bridge
+    name: cryptomate-net
+
+volumes:
+  node_modules:
