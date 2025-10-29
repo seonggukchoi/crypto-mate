@@ -250,12 +250,147 @@ Edit prompt generation in `src/analysis/summarize.ts`
 4. Korean language for AI summaries (configurable)
 5. 60-second cache TTL is sufficient for most use cases
 
+## Docker Support
+
+### Quick Start with Docker
+
+The application includes complete Docker support with optimized images for both production and testing.
+
+#### Prerequisites
+- Docker Engine 20.10+
+- Docker Compose 2.0+
+- Make (optional, for convenience commands)
+
+#### Production Deployment
+
+1. **Build and run with Docker Compose:**
+```bash
+# Build production image
+docker-compose -f docker-compose.prod.yml build
+
+# Run in production
+docker-compose -f docker-compose.prod.yml up -d
+
+# View logs
+docker-compose -f docker-compose.prod.yml logs -f
+```
+
+2. **Using Make commands (easier):**
+```bash
+make build        # Build production image
+make run-prod     # Run production environment
+make logs         # View logs
+```
+
+#### Development with Docker
+
+1. **Run development environment with hot-reload:**
+```bash
+# Start development container
+docker-compose up -d cryptomate-dev
+
+# Or using Make
+make run
+make logs
+```
+
+2. **Run tests in Docker:**
+```bash
+# Run unit tests
+docker-compose -f docker-compose.test.yml up
+
+# Run all tests with quality checks
+docker-compose -f docker-compose.test.yml --profile quality --profile security up
+
+# Or using Make
+make test        # Run basic tests
+make test-all    # Run comprehensive tests
+```
+
+#### Docker Images
+
+We provide two optimized Docker images:
+
+1. **Production Image** (`Dockerfile`)
+   - Multi-stage build for minimal size (~150MB)
+   - Runs as non-root user for security
+   - Uses Alpine Linux for small footprint
+   - Includes signal handling with dumb-init
+   - Production-optimized with only necessary dependencies
+
+2. **Testing Image** (`Dockerfile.test`)
+   - Includes all development dependencies
+   - Built-in linting and code quality checks
+   - Coverage report generation
+   - Suitable for CI/CD pipelines
+
+#### Docker Commands Reference
+
+```bash
+# Build images
+docker build -t cryptomate:latest -f Dockerfile --target production .
+docker build -t cryptomate:test -f Dockerfile.test .
+
+# Run containers
+docker run --env-file .env cryptomate:latest
+docker run -v ./coverage:/app/coverage cryptomate:test
+
+# Docker Compose operations
+docker-compose up -d                    # Start development
+docker-compose -f docker-compose.prod.yml up -d  # Start production
+docker-compose -f docker-compose.test.yml up     # Run tests
+docker-compose down                     # Stop all services
+```
+
+#### CI/CD Integration
+
+For CI/CD pipelines, use the test image:
+
+```yaml
+# GitHub Actions example
+- name: Run tests
+  run: docker-compose -f docker-compose.test.yml up --exit-code-from test-runner
+
+# GitLab CI example
+test:
+  script:
+    - docker-compose -f docker-compose.test.yml up --exit-code-from test-runner
+```
+
+#### Performance Optimization
+
+The production Docker image is optimized for:
+- **Size**: ~150MB total (compared to ~1GB with all dependencies)
+- **Security**: Non-root user, minimal attack surface
+- **Caching**: Multi-stage build with layer optimization
+- **Resources**: Limited to 512MB RAM and 1 CPU by default
+
+#### Troubleshooting Docker
+
+1. **Container won't start:**
+   - Check logs: `docker-compose logs cryptomate`
+   - Verify environment variables: `docker-compose config`
+
+2. **Build fails:**
+   - Clear cache: `docker builder prune`
+   - Rebuild without cache: `docker-compose build --no-cache`
+
+3. **Permission issues:**
+   - Ensure files have correct permissions
+   - The container runs as UID 1001 (nodejs user)
+
+4. **Resource limits:**
+   - Adjust in `docker-compose.prod.yml` under `deploy.resources`
+   - Monitor usage: `docker stats cryptomate`
+
 ## Security
 
 - API keys are never logged
 - Environment variables are validated at startup
 - Input sanitization for all user commands
 - Rate limiting prevents abuse
+- Docker containers run as non-root user
+- Minimal attack surface with Alpine Linux
 
 ## Contributing
 
