@@ -1,0 +1,56 @@
+# Testing Dockerfile for CryptoMate Discord Bot
+# Includes all development dependencies and testing tools
+
+FROM node:20-alpine AS test
+
+# Install additional tools for testing
+RUN apk add --no-cache \
+    git \
+    bash \
+    curl \
+    jq \
+    python3 \
+    make \
+    g++
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files first for layer caching
+COPY package*.json ./
+
+# Install ALL dependencies (including dev)
+RUN npm ci
+
+# Copy source code and test files
+COPY . .
+
+# Create directories for test reports
+RUN mkdir -p coverage reports
+
+# Set environment for testing
+ENV NODE_ENV=test
+ENV CI=true
+
+# Run linting as part of the test image build
+RUN npm run lint
+
+# Build the application
+RUN npm run build
+
+# Default command runs all tests with coverage
+CMD ["npm", "run", "test:run"]
+
+# Alternative commands for different test scenarios
+# Use: docker run <image> <command>
+# Examples:
+#   docker run <image> npm run test -- --watch     # Watch mode
+#   docker run <image> npm run test:run            # Single run
+#   docker run <image> npm run lint                # Only linting
+#   docker run <image> npm run test -- --coverage  # With coverage
+
+# Labels for metadata
+LABEL name="cryptomate-test" \
+      version="1.0.0" \
+      description="Testing environment for CryptoMate Discord Bot" \
+      stage="test"
