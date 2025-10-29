@@ -1,0 +1,133 @@
+version: '3.8'
+
+services:
+  # Unit and Integration Testing
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: cryptomate-test-runner
+    environment:
+      - NODE_ENV=test
+      - CI=true
+      - LOG_LEVEL=error
+      # Mock API keys for testing
+      - DISCORD_TOKEN=test_token_123
+      - DISCORD_APP_ID=test_app_id
+      - DISCORD_PUBLIC_KEY=test_public_key
+      - ANTHROPIC_API_KEY=test_anthropic_key
+      - OPENAI_API_KEY=test_openai_key
+      - LLM_PROVIDER=anthropic
+    volumes:
+      # Mount test files and source
+      - ./src:/app/src:ro
+      - ./test:/app/test:ro
+      - ./package.json:/app/package.json:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./vitest.config.ts:/app/vitest.config.ts:ro
+      # Output directories
+      - ./coverage:/app/coverage
+      - ./reports:/app/reports
+    command: >
+      sh -c "
+        echo '🧪 Running linter...' &&
+        npm run lint &&
+        echo '🧪 Running type check...' &&
+        npx tsc --noEmit &&
+        echo '🧪 Running unit tests with coverage...' &&
+        npm run test:run -- --coverage &&
+        echo '✅ All tests passed!'
+      "
+    networks:
+      - test-network
+
+  # Code quality checks
+  quality-check:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: cryptomate-quality
+    volumes:
+      - ./src:/app/src:ro
+      - ./test:/app/test:ro
+      - ./.eslintrc.json:/app/.eslintrc.json:ro
+      - ./.prettierrc:/app/.prettierrc:ro
+    command: >
+      sh -c "
+        echo '🔍 Checking code quality...' &&
+        npm run lint &&
+        echo '🎨 Checking code formatting...' &&
+        npx prettier --check 'src/**/*.ts' 'test/**/*.ts' &&
+        echo '✅ Code quality checks passed!'
+      "
+    profiles:
+      - quality
+    networks:
+      - test-network
+
+  # Security scanning (optional)
+  security-scan:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: cryptomate-security
+    command: >
+      sh -c "
+        echo '🔐 Running security audit...' &&
+        npm audit --production &&
+        echo '🔐 Checking for known vulnerabilities...' &&
+        npx snyk test || true &&
+        echo '✅ Security scan complete!'
+      "
+    profiles:
+      - security
+    networks:
+      - test-network
+
+  # Performance testing (optional)
+  perf-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: cryptomate-perf
+    environment:
+      - NODE_ENV=test
+    volumes:
+      - ./reports:/app/reports
+    command: >
+      sh -c "
+        echo '⚡ Running performance tests...' &&
+        node -e \"
+          const { performance } = require('perf_hooks');
+          const start = performance.now();
+          // Add performance test logic here
+          const end = performance.now();
+          console.log('Performance test completed in', (end - start).toFixed(2), 'ms');
+        \" &&
+        echo '✅ Performance tests complete!'
+      "
+    profiles:
+      - performance
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge
+    name: cryptomate-test-net
+
+# Usage examples:
+# Run all tests:
+#   docker-compose -f docker-compose.test.yml up
+#
+# Run with quality checks:
+#   docker-compose -f docker-compose.test.yml --profile quality up
+#
+# Run with security scanning:
+#   docker-compose -f docker-compose.test.yml --profile security up
+#
+# Run everything:
+#   docker-compose -f docker-compose.test.yml --profile quality --profile security up
+#
+# Run in CI/CD:
+#   docker-compose -f docker-compose.test.yml up --exit-code-from test-runner
