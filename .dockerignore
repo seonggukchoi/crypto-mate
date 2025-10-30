@@ -12,8 +12,9 @@ yarn-error.log*
 # Build outputs
 dist
 build
-*.js
-*.js.map
+# NOTE: Commented out to ensure build context has all needed files
+# *.js
+# *.js.map
 *.d.ts
 *.d.ts.map
 
