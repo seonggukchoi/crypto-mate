@@ -1,8 +1,7 @@
-import { REST, Routes } from 'discord.js';
 import { config } from './config.js';
 import { createLogger } from './logger.js';
 import { createDiscordClient } from './discord/client.js';
-import { marketCommand, handleMarketCommand } from './discord/commands/market.js';
+import { handleMarketCommand } from './discord/commands/market.js';
 import { handleMention } from './discord/mention.js';
 import { cache } from './cache/memory.js';
 
@@ -47,7 +46,31 @@ async function main() {
     await client.login(config.discord.token);
     logger.info('Successfully logged in to Discord');
   } catch (error) {
-    logger.fatal({ error }, 'Failed to login to Discord');
+    // Ensure error details are properly logged
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
+    logger.fatal(
+      {
+        error,
+        errorMessage,
+        errorStack,
+        errorDetails: JSON.stringify(error, null, 2)
+      },
+      'Failed to login to Discord - check if required intents are enabled in Discord Developer Portal'
+    );
+
+    // Provide helpful error message for common issues
+    if (errorMessage?.includes('disallowed intents')) {
+      console.error('\n❌ Discord Login Failed: Disallowed Intents');
+      console.error('Please enable the following intents in Discord Developer Portal:');
+      console.error('1. Go to https://discord.com/developers/applications');
+      console.error('2. Select your bot application');
+      console.error('3. Go to Bot section → Privileged Gateway Intents');
+      console.error('4. Enable MESSAGE CONTENT INTENT and SERVER MEMBERS INTENT');
+      console.error('5. Save changes and restart the bot\n');
+    }
+
     process.exit(1);
   }
 }
