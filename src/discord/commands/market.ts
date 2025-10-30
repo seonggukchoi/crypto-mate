@@ -147,11 +147,11 @@ function createMarketEmbed(
 
   if (levels.support.length > 0 || levels.resistance.length > 0) {
     const supportStr = levels.support.length > 0
-      ? levels.support.map(s => formatPrice(s)).join(', ')
+      ? levels.support.map((s: number) => formatPrice(s)).join(', ')
       : 'No clear levels';
 
     const resistanceStr = levels.resistance.length > 0
-      ? levels.resistance.map(r => formatPrice(r)).join(', ')
+      ? levels.resistance.map((r: number) => formatPrice(r)).join(', ')
       : 'No clear levels';
 
     embed.addFields({

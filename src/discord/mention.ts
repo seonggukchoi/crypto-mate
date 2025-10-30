@@ -1,6 +1,6 @@
 import { Message, EmbedBuilder } from 'discord.js';
 import { createLogger } from '../logger.js';
-import { parseSymbolFromMessage, normalizeSymbol } from '../utils/symbol.js';
+import { parseSymbolFromMessage } from '../utils/symbol.js';
 import { binance } from '../binance/rest.js';
 import { calculateEMACrossover } from '../indicators/ema.js';
 import { getLatestRSI, interpretRSI } from '../indicators/rsi.js';
@@ -45,7 +45,9 @@ export async function handleMention(message: Message): Promise<void> {
     }
 
     // Show typing indicator
-    await message.channel.sendTyping();
+    if ('sendTyping' in message.channel) {
+      await message.channel.sendTyping();
+    }
 
     logger.info({ symbol, user: message.author.tag }, 'Processing mention');
 
@@ -143,11 +145,11 @@ function createMentionEmbed(
 
   if (levels.support.length > 0 || levels.resistance.length > 0) {
     const supportStr = levels.support.length > 0
-      ? levels.support.slice(0, 1).map(s => formatPrice(s)).join('')
+      ? levels.support.slice(0, 1).map((s: number) => formatPrice(s)).join('')
       : 'N/A';
 
     const resistanceStr = levels.resistance.length > 0
-      ? levels.resistance.slice(0, 1).map(r => formatPrice(r)).join('')
+      ? levels.resistance.slice(0, 1).map((r: number) => formatPrice(r)).join('')
       : 'N/A';
 
     embed.addFields({
