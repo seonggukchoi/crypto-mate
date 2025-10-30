@@ -1,0 +1,44 @@
+# Simplified Dockerfile for Coolify - Single stage build
+FROM node:20-alpine
+
+# Install dumb-init for signal handling
+RUN apk add --no-cache dumb-init
+
+# Create app directory
+WORKDIR /app
+
+# Copy package files first
+COPY package*.json ./
+
+# Install ALL dependencies (both dev and prod)
+RUN npm ci
+
+# Copy all source files
+COPY . .
+
+# Build the TypeScript application
+RUN npm run build
+
+# Remove dev dependencies after build
+RUN npm prune --production
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Change ownership
+RUN chown -R nodejs:nodejs /app
+
+# Switch to non-root user
+USER nodejs
+
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["node", "dist/index.js"]
+
+# Labels
+LABEL name="cryptomate" \
+      version="1.0.0" \
+      description="Discord Trading Bot with AI Analysis"

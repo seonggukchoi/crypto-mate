@@ -1,0 +1,18 @@
+# Nixpacks configuration to prevent auto-detection
+# This forces Coolify to use our Dockerfile instead
+
+[phases.setup]
+nixPkgs = ["nodejs-20_x"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "node dist/index.js"
+
+# Alternatively, tell Nixpacks to use Dockerfile
+[build]
+dockerfile = "./Dockerfile"

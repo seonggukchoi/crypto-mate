@@ -30,11 +30,25 @@ COPY package*.json ./
 # Copy source code
 COPY . .
 
-# Debug: Verify npm is available and package.json exists
-RUN which npm && ls -la package.json
+# Debug: Verify environment and files
+RUN echo "=== Build Environment Debug ===" && \
+    echo "Current directory: $(pwd)" && \
+    echo "PATH: $PATH" && \
+    echo "Node version: $(node --version)" && \
+    echo "NPM version: $(npm --version)" && \
+    echo "Package.json exists: $(test -f package.json && echo 'YES' || echo 'NO')" && \
+    echo "Contents of /app:" && \
+    ls -la && \
+    echo "package.json scripts:" && \
+    cat package.json | grep -A 10 '"scripts"' || echo "No scripts found"
 
-# Build TypeScript
-RUN npm run build
+# Build TypeScript with explicit npm path
+RUN /usr/local/bin/npm run build || \
+    (echo "Build failed. Debugging info:" && \
+     echo "NPM location: $(which npm)" && \
+     echo "Node modules: $(test -d node_modules && echo 'EXISTS' || echo 'MISSING')" && \
+     echo "TypeScript: $(test -f node_modules/.bin/tsc && echo 'EXISTS' || echo 'MISSING')" && \
+     exit 1)
 
 # Stage 3: Production
 FROM node:20-alpine AS production

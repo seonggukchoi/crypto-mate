@@ -1,0 +1,4 @@
+# Coolify Configuration
+buildPack=dockerfile
+dockerfile=Dockerfile
+dockerCompose=docker-compose.production.yml

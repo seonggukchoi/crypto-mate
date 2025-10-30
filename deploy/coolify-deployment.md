@@ -1,24 +1,39 @@
 # Coolify Deployment Guide
 
-## Quick Fix for NPM Build Error (Exit Code 127)
+## 🔴 CRITICAL: NPM Build Error Fix (Exit Code 127)
 
-If you're encountering the "npm run build" error with exit code 127, follow these steps:
+If you're still encountering the "npm run build" error, try these solutions IN ORDER:
 
-### Option 1: Use Production Compose File (REQUIRED)
-In Coolify, set the compose file to: `docker-compose.production.yml`
+### Solution 1: Force Dockerfile Build Mode
+In Coolify's deployment settings:
+1. Set **Build Pack** to: `Dockerfile`
+2. Set **Dockerfile Path** to: `./Dockerfile.simple` (use the simplified version)
+3. Disable **Auto-generate Dockerfile**
+4. Enable **No Cache** for the first build
 
-### Option 2: Clear Docker Cache
-In Coolify's deployment settings, enable "No Cache" option or run:
+### Solution 2: Use Simple Dockerfile
+If the multi-stage build fails, use the simplified version:
+
 ```bash
-docker system prune -a
-docker compose -f docker-compose.production.yml build --no-cache
+# In Coolify, set dockerfile to:
+Dockerfile.simple
 ```
 
-### Option 3: Environment Configuration
-Ensure your `.env` file in Coolify contains:
+### Solution 3: Override Build Command
+In Coolify's **Build Command** field, enter:
+
+```bash
+docker build -f Dockerfile.simple -t myapp . --no-cache
+```
+
+### Solution 4: Use Docker Compose Override
+Set compose file to: `docker-compose.production.yml` and ensure:
+
 ```env
+# In Coolify environment variables
 COMPOSE_FILE=docker-compose.production.yml
 NODE_ENV=production
+DOCKER_BUILDKIT=1
 ```
 
 ## Why This Error Occurs
