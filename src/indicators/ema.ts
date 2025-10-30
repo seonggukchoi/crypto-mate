@@ -1,30 +1,23 @@
 /**
- * Exponential Moving Average (EMA) calculation
+ * Exponential Moving Average (EMA) calculation using technicalindicators library
  */
+import { EMA } from 'technicalindicators';
 
 export function calculateEMA(values: number[], period: number): number[] {
   if (values.length === 0) return [];
   if (period <= 0) throw new Error('Period must be positive');
   if (values.length < period) return [];
 
-  const ema: number[] = [];
-  const multiplier = 2 / (period + 1);
+  // Use the technicalindicators library for EMA calculation
+  const result = EMA.calculate({
+    period: period,
+    values: values
+  });
 
-  // Calculate initial SMA as the seed for EMA
-  let sum = 0;
-  for (let i = 0; i < period; i++) {
-    sum += values[i]!;
-  }
-  ema[period - 1] = sum / period;
-
-  // Calculate EMA for remaining values
-  for (let i = period; i < values.length; i++) {
-    const prevEMA = ema[i - 1]!;
-    const currentValue = values[i]!;
-    ema[i] = (currentValue - prevEMA) * multiplier + prevEMA;
-  }
-
-  return ema;
+  // The library returns a compact array without the initial undefined values
+  // We need to pad it to match the original implementation's behavior
+  const paddedResult: number[] = new Array(period - 1);
+  return paddedResult.concat(result);
 }
 
 export function getLatestEMA(values: number[], period: number): number | null {
