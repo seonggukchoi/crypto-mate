@@ -12,13 +12,8 @@ services:
     environment:
       - NODE_ENV=development
       - LOG_LEVEL=${LOG_LEVEL:-debug}
-    volumes:
-      # Mount source code for hot-reload
-      - ./src:/app/src:ro
-      - ./package.json:/app/package.json:ro
-      - ./tsconfig.json:/app/tsconfig.json:ro
-      # Prevent node_modules from being overwritten
-      - /app/node_modules
+    # Volumes are defined in docker-compose.override.yml for development
+    # Production deployments don't need volume mounts
     command: npm run dev
     networks:
       - cryptomate-network
