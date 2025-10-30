@@ -24,8 +24,14 @@ WORKDIR /app
 # Copy dependencies from previous stage
 COPY --from=dependencies /app/node_modules ./node_modules
 
+# Copy package files explicitly to ensure they're available
+COPY package*.json ./
+
 # Copy source code
 COPY . .
+
+# Debug: Verify npm is available and package.json exists
+RUN which npm && ls -la package.json
 
 # Build TypeScript
 RUN npm run build
