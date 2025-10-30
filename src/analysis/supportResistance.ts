@@ -16,6 +16,7 @@ export interface SupportResistance {
 
 /**
  * Calculate pivot points from the last complete candle
+ * Note: technicalindicators library doesn't provide pivot points, keeping custom implementation
  */
 export function calculatePivotPoints(high: number, low: number, close: number): PivotPoints {
   const pp = (high + low + close) / 3;
