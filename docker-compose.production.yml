@@ -1,0 +1,28 @@
+services:
+  # Production service - no volume mounts needed
+  cryptomate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production  # Use production stage
+    container_name: cryptomate
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    # No volume mounts needed for production
+    # tsconfig.json is already in the image from build time
+    networks:
+      - cryptomate-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  cryptomate-network:
+    driver: bridge
+    name: cryptomate-net
