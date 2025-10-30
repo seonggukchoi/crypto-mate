@@ -1,0 +1,12 @@
+# Development overrides - only used locally
+# This file is automatically loaded by docker compose in development
+# but can be excluded in production with: docker compose -f docker-compose.yml up
+
+services:
+  cryptomate-dev:
+    volumes:
+      # Development-only volume mounts for hot-reload
+      - ./src:/app/src:ro
+      - ./package.json:/app/package.json:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - /app/node_modules
